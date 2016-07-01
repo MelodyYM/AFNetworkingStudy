@@ -14,3 +14,10 @@
 [iOS AFNetWorking源码详解（四](http://zeeyang.com/2016/05/23/AFNetWorking-four/)<br/>
 [iOS AFNetWorking源码详解（五](http://zeeyang.com/2016/05/25/AFNetWorking-five/)<br/>
 [iOS AFNetWorking源码详解（六](http://zeeyang.com/2016/05/27/AFNetWorking-six/)<br/>
+
+###https学习<br/>
+[iOS安全系列之一：HTTPS](http://oncenote.com/2014/10/21/Security-1-HTTPS/)<br/>
+[iOS安全系列之二：HTTPS进阶](http://oncenote.com/2015/09/16/Security-2-HTTPS2/)<br/>
+
+###源码阅读系列博客<br/>
+[FMDB源码阅读系列](http://www.cnblogs.com/polobymulberry/category/789988.html)
