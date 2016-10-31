@@ -6,11 +6,16 @@
 //  Copyright © 2016年 huangchengdu. All rights reserved.
 //
 
-//http://www.joes-hardware.com/specials/saw-blade.gif
+
 
 #import "ViewController.h"
+#import "AFHTTPRequestOperation.h"
+#import "AFHTTPRequestOperationManager.h"
 
+static NSString *urlString =  @"http://www.joes-hardware.com/specials/saw-blade.gif";
 @interface ViewController ()
+@property (weak, nonatomic) IBOutlet UIImageView *imageView;
+@property (weak, nonatomic) IBOutlet UITextView *textView;
 
 @end
 
@@ -19,12 +24,38 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+
 }
 
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (IBAction)loadImage:(id)sender {
+    
+    NSURL *URL = [NSURL URLWithString:urlString];
+    NSURLRequest *request = [NSURLRequest requestWithURL:URL];
+//    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc]initWithRequest:request];
+//    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+//        self.imageView.image = [UIImage imageWithData:responseObject];
+//    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+//        
+//    }];
+//    [operation start];
+    
+    AFURLConnectionOperation *operation = [[AFURLConnectionOperation alloc]initWithRequest:request];
+    [operation setCompletionBlock:^{
+        self.imageView.image = [UIImage imageWithData:operation.responseData];
+    }];
+    [operation start];
+}
+
+
+- (IBAction)loadData:(id)sender {
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    [manager GET:@"http://www.joes-hardware.com/hammers.html" parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        self.textView.text = [[NSString alloc]initWithData:responseObject encoding:NSUTF8StringEncoding];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        
+    }];
 }
 
 

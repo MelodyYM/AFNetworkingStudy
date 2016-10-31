@@ -31,6 +31,9 @@
 // You can turn on ARC for only AFNetworking files by adding -fobjc-arc to the build phase for each of its files.
 #endif
 
+/**
+ operation的四种状态
+ */
 typedef NS_ENUM(NSInteger, AFOperationState) {
     AFOperationPausedState      = -1,
     AFOperationReadyState       = 1,
@@ -44,6 +47,12 @@ typedef UIBackgroundTaskIdentifier AFBackgroundTaskIdentifier;
 typedef id AFBackgroundTaskIdentifier;
 #endif
 
+
+/**
+ completionBlock操作所在的group，单列
+
+ @return 返回结果处理group
+ */
 static dispatch_group_t url_request_operation_completion_group() {
     static dispatch_group_t af_url_request_operation_completion_group;
     static dispatch_once_t onceToken;
@@ -53,7 +62,7 @@ static dispatch_group_t url_request_operation_completion_group() {
 
     return af_url_request_operation_completion_group;
 }
-
+//completionBlock处理所在队列。单列。
 static dispatch_queue_t url_request_operation_completion_queue() {
     static dispatch_queue_t af_url_request_operation_completion_queue;
     static dispatch_once_t onceToken;
@@ -63,17 +72,27 @@ static dispatch_queue_t url_request_operation_completion_queue() {
 
     return af_url_request_operation_completion_queue;
 }
-
+//operation所在线程递归锁的名字
 static NSString * const kAFNetworkingLockName = @"com.alamofire.networking.operation.lock";
 
 NSString * const AFNetworkingOperationDidStartNotification = @"com.alamofire.networking.operation.start";
 NSString * const AFNetworkingOperationDidFinishNotification = @"com.alamofire.networking.operation.finish";
-
+//进度信息处理
 typedef void (^AFURLConnectionOperationProgressBlock)(NSUInteger bytes, long long totalBytes, long long totalBytesExpected);
+//认证信息处理
 typedef void (^AFURLConnectionOperationAuthenticationChallengeBlock)(NSURLConnection *connection, NSURLAuthenticationChallenge *challenge);
 typedef NSCachedURLResponse * (^AFURLConnectionOperationCacheResponseBlock)(NSURLConnection *connection, NSCachedURLResponse *cachedResponse);
+//重置请求处理
 typedef NSURLRequest * (^AFURLConnectionOperationRedirectResponseBlock)(NSURLConnection *connection, NSURLRequest *request, NSURLResponse *redirectResponse);
 
+
+/**
+ operation的状态与自定义状态的对应
+ 
+ @param state 自定义状态
+
+ @return operation对应的状态
+ */
 static inline NSString * AFKeyPathFromOperationState(AFOperationState state) {
     switch (state) {
         case AFOperationReadyState:
@@ -93,6 +112,16 @@ static inline NSString * AFKeyPathFromOperationState(AFOperationState state) {
     }
 }
 
+
+/**
+ operation的状态转换是否合法判断
+
+ @param fromState   开始状态
+ @param toState     期望状态
+ @param isCancelled 当前是否被取消了
+
+ @return true或者false
+ */
 static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperationState toState, BOOL isCancelled) {
     switch (fromState) {
         case AFOperationReadyState:
@@ -134,6 +163,7 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     }
 }
 
+
 @interface AFURLConnectionOperation ()
 @property (readwrite, nonatomic, assign) AFOperationState state;
 @property (readwrite, nonatomic, strong) NSRecursiveLock *lock;
@@ -160,6 +190,10 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
 @implementation AFURLConnectionOperation
 @synthesize outputStream = _outputStream;
 
+/**
+ 网络请求线程加入对应的runloop事件监听
+
+ */
 + (void)networkRequestThreadEntryPoint:(id)__unused object {
     @autoreleasepool {
         [[NSThread currentThread] setName:@"AFNetworking"];
@@ -170,6 +204,12 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     }
 }
 
+
+/**
+ 新建一个线程来处理网络请求操作
+
+ @return 线程
+ */
 + (NSThread *)networkRequestThread {
     static NSThread *_networkRequestThread = nil;
     static dispatch_once_t oncePredicate;
@@ -181,6 +221,13 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     return _networkRequestThread;
 }
 
+/**
+ 初始化一个请求
+
+ @param urlRequest request对象
+
+ @return 返回一个operation
+ */
 - (instancetype)initWithRequest:(NSURLRequest *)urlRequest {
     NSParameterAssert(urlRequest);
 
@@ -190,7 +237,7 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     }
 
     _state = AFOperationReadyState;
-
+    //当前线程添加递归锁
     self.lock = [[NSRecursiveLock alloc] init];
     self.lock.name = kAFNetworkingLockName;
     
@@ -199,7 +246,7 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     self.request = urlRequest;
     
     self.shouldUseCredentialStorage = YES;
-
+    //安全策略、默认是http
     self.securityPolicy = [AFSecurityPolicy defaultPolicy];
 
     return self;
@@ -221,6 +268,11 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
 
 #pragma mark -
 
+/**
+ 保存返回数据
+
+ @param responseData 返回数据保存到属性
+ */
 - (void)setResponseData:(NSData *)responseData {
     [self.lock lock];
     if (!responseData) {
@@ -231,6 +283,11 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     [self.lock unlock];
 }
 
+/**
+ 保存返回数据
+
+ @return 返回数据保存到属性
+ */
 - (NSString *)responseString {
     [self.lock lock];
     if (!_responseString && self.response && self.responseData) {
@@ -241,6 +298,11 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     return _responseString;
 }
 
+/**
+ 获取返回数据的编码类型
+
+ @return 编码类型
+ */
 - (NSStringEncoding)responseStringEncoding {
     [self.lock lock];
     if (!_responseStringEncoding && self.response) {
@@ -259,10 +321,20 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     return _responseStringEncoding;
 }
 
+/**
+ 获取http请求的body数据
+
+ @return body数据
+ */
 - (NSInputStream *)inputStream {
     return self.request.HTTPBodyStream;
 }
 
+/**
+ 设置http请求的body数据，及时请求体数据啦
+
+ @param inputStream body数据
+ */
 - (void)setInputStream:(NSInputStream *)inputStream {
     NSMutableURLRequest *mutableRequest = [self.request mutableCopy];
     mutableRequest.HTTPBodyStream = inputStream;
@@ -441,6 +513,9 @@ static inline BOOL AFStateTransitionIsValid(AFOperationState fromState, AFOperat
     return YES;
 }
 
+/*
+    开始operation的方法
+ */
 - (void)start {
     [self.lock lock];
     if ([self isCancelled]) {

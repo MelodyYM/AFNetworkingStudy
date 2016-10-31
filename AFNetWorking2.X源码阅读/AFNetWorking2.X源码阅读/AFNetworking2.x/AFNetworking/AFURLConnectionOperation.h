@@ -86,6 +86,12 @@
  - Operation copies do not include `completionBlock`, as it often strongly captures a reference to `self`, which would otherwise have the unintuitive side-effect of pointing to the _original_ operation when copied.
  */
 
+/**
+ 1AFURLConnectionOperation是一个自定义的并发操作、实现了NSURLConnection的代理方法。
+ 2处理了completionBlock中循环引用问题，强烈建议不要再子类中重置completionBlock。如果要使用http或者https的协议，建议使用AFHTTPRequestOperation子类。
+ 3实现了复制协议和归档协议。
+ 4实现了对ssl的处理，默认是什么也不做。
+ */
 @interface AFURLConnectionOperation : NSOperation <NSURLConnectionDelegate, NSURLConnectionDataDelegate, NSSecureCoding, NSCopying>
 
 ///-------------------------------
@@ -265,6 +271,7 @@
 
  @param block A block object to be called when an undetermined number of bytes have been uploaded to the server. This block has no return value and takes three arguments: the number of bytes written since the last time the upload progress block was called, the total bytes written, and the total bytes expected to be written during the request, as initially determined by the length of the HTTP body. This block may be called multiple times, and will execute on the main thread.
  */
+
 - (void)setUploadProgressBlock:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))block;
 
 /**
