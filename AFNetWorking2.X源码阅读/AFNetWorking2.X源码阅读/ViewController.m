@@ -32,20 +32,27 @@ static NSString *urlString =  @"http://www.joes-hardware.com/specials/saw-blade.
     
     NSURL *URL = [NSURL URLWithString:urlString];
     NSURLRequest *request = [NSURLRequest requestWithURL:URL];
-//    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc]initWithRequest:request];
-//    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
-//        self.imageView.image = [UIImage imageWithData:responseObject];
-//    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-//        
-//    }];
-//    [operation start];
+    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc]initWithRequest:request];
+    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        self.imageView.image = [UIImage imageWithData:responseObject];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        
+    }];
+    [operation start];
     
+
+}
+
+- (IBAction)loadImageAFURL:(id)sender {
+    NSURL *URL = [NSURL URLWithString:urlString];
+    NSURLRequest *request = [NSURLRequest requestWithURL:URL];
     AFURLConnectionOperation *operation = [[AFURLConnectionOperation alloc]initWithRequest:request];
     [operation setCompletionBlock:^{
         self.imageView.image = [UIImage imageWithData:operation.responseData];
     }];
     [operation start];
 }
+
 
 
 - (IBAction)loadData:(id)sender {
