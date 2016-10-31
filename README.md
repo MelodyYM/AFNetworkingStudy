@@ -17,7 +17,9 @@
 
 ###https学习<br/>
 [iOS安全系列之一：HTTPS](http://oncenote.com/2014/10/21/Security-1-HTTPS/)<br/>
+[图解SSL/TLS协议](http://www.ruanyifeng.com/blog/2014/09/illustration-ssl.html)<br/>
 [iOS安全系列之二：HTTPS进阶](http://oncenote.com/2015/09/16/Security-2-HTTPS2/)<br/>
+[苹果官网文档关于HTTPS](https://developer.apple.com/library/content/documentation/NetworkingInternetWeb/Conceptual/NetworkingOverview/WorkingWithHTTPAndHTTPSRequests/WorkingWithHTTPAndHTTPSRequests.html)<br/>
 
 ###源码阅读系列博客<br/>
 [FMDB源码阅读系列](http://www.cnblogs.com/polobymulberry/category/789988.html)
